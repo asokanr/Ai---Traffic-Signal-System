@@ -24,9 +24,8 @@ class EmergencyManager:
                 self._activate_emergency(signal)
             return True
         else:
-            if signal.is_emergency_active:
-                self._resolve_emergency(signal)
-            return False
+            # If emergency vehicle count cleared and mode is not locked, resolve
+            return signal.is_emergency_active
 
     def _activate_emergency(self, active_signal):
         """

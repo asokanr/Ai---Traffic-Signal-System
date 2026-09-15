@@ -1,16 +1,22 @@
+import json
+import time
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
-from django.core.mail import send_mail
+from django.contrib.auth import authenticate, login, logout
+
+
+def user_logout(request):
+    """Log out user (supports both GET and POST) and redirect to login."""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('login')
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import OTP
 from .utils import generate_otp
-
-import json
 
 
 def register_page(request):
@@ -38,7 +44,10 @@ def register(request):
         if not all([full_name, username, email, password]):
             return JsonResponse({'success': False, 'error': 'All fields are required', 'field': 'general'})
 
-        if not email_verified:
+        # Server-side verification guard: NEVER trust client-supplied boolean flags
+        session_email_verified = request.session.get('email_verified', False)
+        session_email_target = request.session.get('email_verified_target', '')
+        if not session_email_verified or session_email_target.lower() != email.lower():
             return JsonResponse({'success': False, 'error': 'Email must be verified before registration', 'field': 'email'})
 
         if User.objects.filter(username=username).exists():
@@ -74,6 +83,13 @@ def register(request):
             profile.save()
         except Exception:
             pass
+
+        # Invalidate session verification flags after account creation to prevent reuse
+        request.session.pop('email_verified', None)
+        request.session.pop('email_verified_target', None)
+        request.session.pop('mobile_verified', None)
+        request.session.pop('mobile_verified_target', None)
+        request.session.modified = True
 
         return JsonResponse({'success': True, 'message': 'Account created successfully'})
 
@@ -147,9 +163,12 @@ def check_email(request):
     return JsonResponse({'available': available})
 
 
+OTP_EXPIRY_SECONDS = 600  # 10 minutes
+
+
 @require_POST
 def send_email_otp(request):
-    """Generate and send OTP to email."""
+    """Generate server-side Email OTP for demo flow and store in session."""
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -157,54 +176,29 @@ def send_email_otp(request):
 
     email = data.get('email', '').strip()
     if not email:
-        return JsonResponse({'success': False, 'error': 'Email is required'})
+        return JsonResponse({'success': False, 'error': 'Email is required'}, status=400)
 
     otp = generate_otp()
-    # Store OTP in session
+
+    # Invalidate previous OTP and store fresh OTP + timestamp in session
     request.session['email_otp'] = otp
     request.session['email_otp_target'] = email
+    request.session['email_otp_time'] = time.time()
+    request.session['email_verified'] = False
+    request.session.modified = True
 
-    # Send email via SMTP
-    from django.conf import settings as django_settings
-
-    html_message = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 30px; background: #0f172a; border-radius: 16px; border: 1px solid #6366f1;">
-        <h2 style="color: #22d3ee; text-align: center; margin-bottom: 10px;">🚦 Smart Traffic AI</h2>
-        <p style="color: #94a3b8; text-align: center; font-size: 14px;">Email Verification Code</p>
-        <div style="background: #1e293b; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-            <h1 style="color: #6366f1; font-size: 36px; letter-spacing: 8px; margin: 0;">{otp}</h1>
-        </div>
-        <p style="color: #94a3b8; text-align: center; font-size: 13px;">This code expires in 10 minutes. Do not share it with anyone.</p>
-    </div>
-    """
-
-    try:
-        from django.core.mail import EmailMultiAlternatives
-        msg = EmailMultiAlternatives(
-            subject='Smart Traffic AI – Email Verification Code',
-            body=f'Your verification code is: {otp}\nThis code expires in 10 minutes.',
-            from_email=django_settings.DEFAULT_FROM_EMAIL,
-            to=[email],
-        )
-        msg.attach_alternative(html_message, "text/html")
-        msg.send(fail_silently=False)
-        print(f"[OTP] Email sent successfully to {email}, OTP: {otp}")
-        return JsonResponse({'success': True, 'message': 'OTP sent to your email'})
-    except Exception as e:
-        print(f"[OTP ERROR] Failed to send email to {email}: {e}")
-        print(f"[OTP FALLBACK] OTP for {email}: {otp}")
-        # Still return success since OTP is stored in session
-        # The user can check the Django console in dev mode
-        return JsonResponse({
-            'success': True,
-            'message': 'OTP generated! Check your email (or Django terminal in dev mode)',
-            'dev_note': f'If SMTP is not configured, check Django terminal. OTP: {otp}' if django_settings.DEBUG else None
-        })
+    return JsonResponse({
+        'success': True,
+        'message': 'OTP generated successfully',
+        'otp': otp,
+        'otp_type': 'email',
+        'expires_in': OTP_EXPIRY_SECONDS,
+    })
 
 
 @require_POST
 def verify_email_otp(request):
-    """Verify the email OTP from session."""
+    """Verify the Email OTP from session."""
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -212,53 +206,81 @@ def verify_email_otp(request):
 
     otp_input = data.get('otp', '').strip()
     stored_otp = request.session.get('email_otp', '')
+    created_time = request.session.get('email_otp_time', 0)
 
-    if not stored_otp:
-        return JsonResponse({'success': False, 'error': 'No OTP found. Please request a new one.'})
+    if not stored_otp or not created_time:
+        return JsonResponse({
+            'success': False,
+            'error': 'No OTP found. Please request a new one.',
+            'status': 'missing'
+        })
 
-    if otp_input == stored_otp:
-        request.session['email_verified'] = True
-        # Clear OTP
-        del request.session['email_otp']
-        return JsonResponse({'success': True, 'message': 'Email verified successfully'})
-    else:
-        return JsonResponse({'success': False, 'error': 'Invalid OTP. Please try again.'})
+    # Expiry validation (10 minutes)
+    if (time.time() - created_time) > OTP_EXPIRY_SECONDS:
+        request.session.pop('email_otp', None)
+        request.session.pop('email_otp_time', None)
+        request.session.modified = True
+        return JsonResponse({
+            'success': False,
+            'error': 'OTP expired. Please generate a new OTP.',
+            'status': 'expired'
+        })
+
+    # Value comparison
+    if otp_input != stored_otp:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid OTP. Please enter the correct OTP.',
+            'status': 'invalid'
+        })
+
+    # Correct OTP verified
+    request.session['email_verified'] = True
+    request.session['email_verified_target'] = request.session.get('email_otp_target', '')
+    # Invalidate OTP after successful verification to prevent reuse
+    request.session.pop('email_otp', None)
+    request.session.pop('email_otp_time', None)
+    request.session.modified = True
+
+    return JsonResponse({'success': True, 'message': 'Email verified successfully'})
 
 
 @require_POST
 def send_mobile_otp(request):
-    """Generate and store mobile OTP (SMS provider placeholder)."""
+    """Generate server-side Mobile OTP for demo flow and store in session."""
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
     mobile = data.get('mobile', '').strip()
-    country_code = data.get('country_code', '+91')
+    country_code = data.get('country_code', '+91').strip()
 
-    if not mobile or len(mobile) < 10:
-        return JsonResponse({'success': False, 'error': 'Valid mobile number is required'})
+    if not mobile or len(mobile) < 7:
+        return JsonResponse({'success': False, 'error': 'Valid mobile number is required'}, status=400)
 
+    full_target = f"{country_code}{mobile}"
     otp = generate_otp()
+
+    # Invalidate previous OTP and store fresh OTP + timestamp in session
     request.session['mobile_otp'] = otp
-    request.session['mobile_otp_target'] = f"{country_code}{mobile}"
-
-    from django.conf import settings as django_settings
-
-    # TODO: Integrate SMS provider (Twilio / Fast2SMS)
-    # For now, print to console and return in dev_note
-    print(f"[OTP] Mobile OTP for {country_code}{mobile}: {otp}")
+    request.session['mobile_otp_target'] = full_target
+    request.session['mobile_otp_time'] = time.time()
+    request.session['mobile_verified'] = False
+    request.session.modified = True
 
     return JsonResponse({
         'success': True,
-        'message': 'OTP sent to mobile',
-        'dev_note': f'SMS not configured yet. Your OTP is: {otp}' if django_settings.DEBUG else None
+        'message': 'OTP generated successfully',
+        'otp': otp,
+        'otp_type': 'mobile',
+        'expires_in': OTP_EXPIRY_SECONDS,
     })
 
 
 @require_POST
 def verify_mobile_otp(request):
-    """Verify the mobile OTP from session."""
+    """Verify the Mobile OTP from session."""
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -266,13 +288,40 @@ def verify_mobile_otp(request):
 
     otp_input = data.get('otp', '').strip()
     stored_otp = request.session.get('mobile_otp', '')
+    created_time = request.session.get('mobile_otp_time', 0)
 
-    if not stored_otp:
-        return JsonResponse({'success': False, 'error': 'No OTP found. Please request a new one.'})
+    if not stored_otp or not created_time:
+        return JsonResponse({
+            'success': False,
+            'error': 'No OTP found. Please request a new one.',
+            'status': 'missing'
+        })
 
-    if otp_input == stored_otp:
-        request.session['mobile_verified'] = True
-        del request.session['mobile_otp']
-        return JsonResponse({'success': True, 'message': 'Mobile verified successfully'})
-    else:
-        return JsonResponse({'success': False, 'error': 'Invalid OTP. Please try again.'})
+    # Expiry validation (10 minutes)
+    if (time.time() - created_time) > OTP_EXPIRY_SECONDS:
+        request.session.pop('mobile_otp', None)
+        request.session.pop('mobile_otp_time', None)
+        request.session.modified = True
+        return JsonResponse({
+            'success': False,
+            'error': 'OTP expired. Please generate a new OTP.',
+            'status': 'expired'
+        })
+
+    # Value comparison
+    if otp_input != stored_otp:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid OTP. Please enter the correct OTP.',
+            'status': 'invalid'
+        })
+
+    # Correct OTP verified
+    request.session['mobile_verified'] = True
+    request.session['mobile_verified_target'] = request.session.get('mobile_otp_target', '')
+    # Invalidate OTP after successful verification to prevent reuse
+    request.session.pop('mobile_otp', None)
+    request.session.pop('mobile_otp_time', None)
+    request.session.modified = True
+
+    return JsonResponse({'success': True, 'message': 'Mobile verified successfully'})

@@ -161,7 +161,6 @@ function updateAllControls(signals) {
             const state = s.current_state;
 
             // 1. Text & Classes
-            // Reset Classes
             card.classList.remove('active-green', 'active-red', 'active-yellow', 'emergency-mode');
             if (isEmergency) card.classList.add('emergency-mode');
             else if (state === 'GREEN') card.classList.add('active-green');
@@ -185,22 +184,24 @@ function updateAllControls(signals) {
             // 3. Timer
             const timeEl = document.getElementById(`time-${s.direction}`);
             if (timeEl) {
-                if (s.state_start_time) {
+                if (isEmergency) {
+                    timeEl.innerText = 'SOS';
+                    timeEl.style.color = '#ef4444';
+                } else if (s.current_state === 'RED') {
+                    timeEl.innerText = 'WAIT';
+                    timeEl.style.color = 'var(--neon-red)';
+                } else if (s.state_start_time) {
                     const now = new Date();
                     const start = new Date(s.state_start_time);
                     const elapsed = (now - start) / 1000;
-                    let duration = s.current_state === 'GREEN' ? s.green_time : (s.current_state === 'RED' ? s.red_time : s.yellow_time);
-
-                    if (isEmergency) {
-                        timeEl.innerText = 'SOS';
-                        timeEl.style.color = '#ef4444';
-                    } else {
-                        const remaining = Math.max(0, Math.ceil(duration - elapsed));
-                        timeEl.innerText = remaining + 's';
-                        timeEl.style.color = stateColor;
-                    }
+                    const duration = s.current_state === 'GREEN' ? s.green_time : (s.yellow_time || 3);
+                    const remaining = Math.max(0, Math.ceil(duration - elapsed));
+                    const mins = Math.floor(remaining / 60);
+                    const secs = remaining % 60;
+                    timeEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    timeEl.style.color = stateColor;
                 } else {
-                    timeEl.innerText = '--';
+                    timeEl.innerText = '--:--';
                 }
             }
 
@@ -217,6 +218,9 @@ function updateAllControls(signals) {
             }
         }
     });
+
+    updateSOSVisuals();
+    updateTimersLocally();
 }
 
 // ============================================================
@@ -261,6 +265,23 @@ async function updateDashboardMenu() {
         if (totalLiveEl) {
             const total = Object.values(signalData).reduce((sum, s) => sum + (s.vehicle_count || 0), 0);
             totalLiveEl.innerText = total;
+        }
+
+        // Active Countdown Timer
+        const dashTimerEl = document.getElementById('dashTimer');
+        if (dashTimerEl) {
+            const activeSig = Object.values(signalData).find(s => s.current_state === 'GREEN' || s.current_state === 'YELLOW');
+            if (activeSig && activeSig.state_start_time) {
+                const now = new Date();
+                const start = new Date(activeSig.state_start_time);
+                const elapsed = (now - start) / 1000;
+                const dur = activeSig.current_state === 'GREEN' ? activeSig.green_time : (activeSig.yellow_time || 5);
+                const remaining = Math.max(0, Math.ceil(dur - elapsed));
+                dashTimerEl.innerText = remaining + 's';
+                dashTimerEl.style.color = activeSig.current_state === 'GREEN' ? 'var(--neon-green)' : 'var(--neon-yellow)';
+            } else {
+                dashTimerEl.innerText = '--';
+            }
         }
 
     } catch (e) {
@@ -425,13 +446,17 @@ window.switchMainView = function (viewName) {
         'view-heatmap', 'view-stats', 'view-environment', 'view-history', 'view-admin', 'view-ai-analysis'];
     viewIds.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = 'none';
+        }
     });
 
     // 4. Show selected view and init
     const target = document.getElementById('view-' + viewName);
     if (!target) return;
 
+    target.classList.remove('hidden');
     if (viewName === 'dashboard') {
         target.style.display = 'flex';
         setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
@@ -440,34 +465,41 @@ window.switchMainView = function (viewName) {
     }
 
     // 5. Initialize view-specific logic
-    switch (viewName) {
-        case 'emergency':
-            if (typeof initEmergencyView === 'function') initEmergencyView();
-            break;
-        case 'multijunction':
-            if (typeof initMultiJunctionView === 'function') initMultiJunctionView();
-            break;
-        case 'heatmap':
-            if (typeof initHeatmapView === 'function') initHeatmapView();
-            break;
-        case 'stats':
-            loadStats('N', document.querySelector('#view-stats .dir-tab.active'));
-            if (typeof initAnalyticsView === 'function') initAnalyticsView();
-            break;
-        case 'history':
-            if (typeof loadHistory === 'function') loadHistory();
-            break;
-        case 'admin':
-            if (typeof initAdminView === 'function') initAdminView();
-            break;
-        case 'environment':
-            if (typeof initEnvironmentView === 'function') initEnvironmentView();
-            break;
-        case 'ai-analysis':
-            if (typeof initAiAnalysis === 'function') initAiAnalysis();
-            break;
+    try {
+        switch (viewName) {
+            case 'emergency':
+                if (typeof initEmergencyView === 'function') initEmergencyView();
+                break;
+            case 'multijunction':
+                if (typeof initMultiJunctionView === 'function') initMultiJunctionView();
+                break;
+            case 'heatmap':
+                if (typeof initHeatmapView === 'function') initHeatmapView();
+                break;
+            case 'stats':
+                if (typeof loadStats === 'function') {
+                    const activeTab = document.querySelector('#view-stats .dir-tab.active');
+                    loadStats('N', activeTab);
+                }
+                if (typeof initAnalyticsView === 'function') initAnalyticsView();
+                break;
+            case 'history':
+                if (typeof loadHistory === 'function') loadHistory();
+                break;
+            case 'admin':
+                if (typeof initAdminView === 'function') initAdminView();
+                break;
+            case 'environment':
+                if (typeof initEnvironmentView === 'function') initEnvironmentView();
+                break;
+            case 'ai-analysis':
+                if (typeof initAiAnalysis === 'function') initAiAnalysis();
+                break;
+        }
+    } catch (err) {
+        console.error(`[View Switch Error in ${viewName}]`, err);
     }
-}
+};
 
 // SOS Dimming Helper
 window.updateSOSVisuals = function () {
@@ -608,22 +640,129 @@ async function triggerEmergency(direction) {
     const signal = signalData[direction];
     if (!signal) return;
     const newState = !signal.is_emergency_active;
+    const dirNames = { 'N': 'NORTH', 'S': 'SOUTH', 'E': 'EAST', 'W': 'WEST' };
+    const dirName = dirNames[direction] || direction;
+
+    if (newState) {
+        if (vehicleQueues[direction]) {
+            vehicleQueues[direction].emergency_vehicle = Math.max(1, (vehicleQueues[direction].emergency_vehicle || 0) + 1);
+        }
+        if (typeof vehicles !== 'undefined' && typeof MiniMapVehicle === 'function') {
+            vehicles.push(new MiniMapVehicle(direction, 'emergency'));
+        }
+        if (typeof showNotification === 'function') {
+            showNotification('EMERGENCY ACTIVE', `Priority corridor opened for ${dirName}!`, 'danger');
+        }
+    } else {
+        if (vehicleQueues[direction]) {
+            vehicleQueues[direction].emergency_vehicle = 0;
+        }
+        if (typeof showNotification === 'function') {
+            showNotification('EMERGENCY RESOLVED', `Normal traffic flow resumed for ${dirName}.`, 'success');
+        }
+    }
+
     try {
-        await fetch(`/api/signals/${signal.id}/toggle_sos/`, {
+        const response = await fetch(`/api/signals/${signal.id}/toggle_sos/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
             body: JSON.stringify({ active: newState })
         });
-        // State update happens via next cycle/update loop
-    } catch (e) { alert("SOS Failed"); }
+        const data = await response.json();
+        if (data && data.signals) {
+            updateAllControls(data.signals);
+        }
+        updateDashboardMenu();
+    } catch (e) {
+        console.error("SOS toggle error", e);
+    }
 }
+
+let isCycleLocked = false;
+
+window.updateTimersLocally = function () {
+    const now = Date.now();
+    let activeSignal = null;
+    const dirNames = { 'N': 'NORTH', 'S': 'SOUTH', 'E': 'EAST', 'W': 'WEST' };
+
+    Object.values(window.signalData || {}).forEach(s => {
+        const timeEl = document.getElementById(`time-${s.direction}`);
+        const isEmergency = s.is_emergency_active;
+        const state = s.current_state;
+
+        if (state === 'GREEN' || state === 'YELLOW') {
+            activeSignal = s;
+        }
+
+        if (timeEl) {
+            if (isEmergency) {
+                timeEl.innerText = 'SOS';
+                timeEl.style.color = '#ef4444';
+            } else if (state === 'RED') {
+                timeEl.innerText = 'WAIT';
+                timeEl.style.color = 'var(--neon-red)';
+            } else if (s.state_start_time) {
+                const start = new Date(s.state_start_time).getTime();
+                const elapsed = Math.max(0, (now - start) / 1000);
+                const duration = state === 'GREEN' ? (s.green_time || 30) : (s.yellow_time || 3);
+                const remaining = Math.max(0, Math.ceil(duration - elapsed));
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                timeEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                timeEl.style.color = state === 'GREEN' ? 'var(--neon-green)' : 'var(--neon-yellow)';
+            } else {
+                timeEl.innerText = '--:--';
+            }
+        }
+    });
+
+    // Update Dashboard Stats Bottom/Top Active Displays
+    const activeGreenEl = document.getElementById('dashActiveGreen');
+    const dashTimerEl = document.getElementById('dashTimer');
+
+    if (activeSignal) {
+        if (activeGreenEl) {
+            activeGreenEl.innerText = dirNames[activeSignal.direction] || activeSignal.direction;
+            activeGreenEl.style.color = activeSignal.current_state === 'GREEN' ? 'var(--neon-green)' : 'var(--neon-yellow)';
+        }
+
+        if (dashTimerEl && activeSignal.state_start_time) {
+            const start = new Date(activeSignal.state_start_time).getTime();
+            const elapsed = Math.max(0, (now - start) / 1000);
+            const duration = activeSignal.current_state === 'GREEN' ? (activeSignal.green_time || 30) : (activeSignal.yellow_time || 3);
+            const remaining = Math.max(0, Math.ceil(duration - elapsed));
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            dashTimerEl.innerText = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            dashTimerEl.style.color = activeSignal.current_state === 'GREEN' ? 'var(--neon-green)' : 'var(--neon-yellow)';
+
+            // Auto-advance cycle when timer hits 0
+            if (remaining <= 0 && !isCycleLocked && !activeSignal.is_emergency_active) {
+                isCycleLocked = true;
+                cycleSignals().finally(() => {
+                    setTimeout(() => { isCycleLocked = false; }, 1000);
+                });
+            }
+        }
+    } else {
+        if (activeGreenEl) {
+            activeGreenEl.innerText = 'WAIT';
+            activeGreenEl.style.color = 'var(--neon-yellow)';
+        }
+        if (dashTimerEl) {
+            dashTimerEl.innerText = '00:00:00';
+        }
+    }
+};
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
     fetchSignals().then(data => {
         if (data) updateAllControls(data);
-        // startSimulation(); <--- REMOVED: Wait for user input
     });
+
+    // Continuous 1-second countdown loop
+    setInterval(updateTimersLocally, 1000);
 });
 
 async function resetStats() {

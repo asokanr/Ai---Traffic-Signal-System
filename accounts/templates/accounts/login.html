@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 
@@ -7,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Smart Traffic AI – Command Center</title>
     <meta name="description" content="Secure login to Smart Traffic AI – Intelligent Urban Traffic Command System">
+    {% load static %}
 
     <!-- Fonts (loaded by CSS @import too, but preconnect for speed) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,7 +14,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Login CSS -->
-    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=7">
 </head>
 
 <body class="login-page">
@@ -91,26 +91,25 @@
 
             <!-- ── Messages ── -->
             {% if messages %}
-            <ul class="login-messages">
+            <div class="login-messages">
                 {% for message in messages %}
-                <li class="{% if message.tags == 'success' %}success-msg{% else %}error-msg{% endif %}">
-                    <i
-                        class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
-                    {{ message }}
-                </li>
+                <div class="msg-item {% if message.tags == 'success' %}success-msg{% else %}error-msg{% endif %}">
+                    <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
             {% endif %}
 
             {% if form.non_field_errors %}
-            <ul class="login-messages">
+            <div class="login-messages">
                 {% for error in form.non_field_errors %}
-                <li class="error-msg">
+                <div class="msg-item error-msg">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    {{ error }}
-                </li>
+                    <span>{{ error }}</span>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
             {% endif %}
 
             <!-- ── Login Form ── -->
@@ -120,21 +119,23 @@
                 <!-- Username -->
                 <div class="input-group">
                     <i class="fa-solid fa-user input-icon-login"></i>
-                    {{ form.username }}
-                    <label class="floating-label">Username</label>
+                    <input type="text" name="username" id="id_username" class="input-field" placeholder="Username or Email"
+                        autocomplete="username" required title="Username or Email" {% if form.username.value %}value="{{ form.username.value }}"{% endif %}>
+                    <label class="floating-label" for="id_username">Username or Email</label>
                     <div class="input-underline"></div>
                 </div>
 
                 <!-- Password -->
                 <div class="input-group">
                     <i class="fa-solid fa-lock input-icon-login"></i>
-                    {{ form.password }}
-                    <label class="floating-label">Password</label>
+                    <input type="password" name="password" id="id_password" class="input-field" placeholder="Password"
+                        autocomplete="current-password" required title="Password">
+                    <label class="floating-label" for="id_password">Password</label>
                     <div class="input-underline"></div>
-                    <i class="fa-solid fa-eye password-toggle"></i>
+                    <i class="fa-solid fa-eye password-toggle" title="Toggle password visibility" aria-label="Toggle password visibility"></i>
                 </div>
 
-                <a href="{% url 'login' %}" class="forgot-link">Forgot Password?</a>
+                <a href="{% url 'password_reset' %}" class="forgot-link">Forgot Password?</a>
 
                 <!-- Submit Button -->
                 <button type="submit" class="btn-enter" id="btn-enter">
@@ -175,14 +176,14 @@
             </div>
             <div class="stat-item">
                 <span class="stat-label">AI Status</span>
-                <span class="stat-value" style="color: #4ade80;">Operational</span>
+                <span class="stat-value text-neon-green">Operational</span>
             </div>
         </div>
     </div>
 
 
     <!-- ═══════════════ LOGIN JS ═══════════════ -->
-    <script src="{% static 'js/login.js' %}?v=1"></script>
+    <script src="{% static 'js/login.js' %}?v=7"></script>
 
 </body>
 

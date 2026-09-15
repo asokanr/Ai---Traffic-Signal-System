@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Django
+db.sqlite3
+*.log
+media/
+video_uploads/
+
+# YOLO Model Weights (large file — download on setup)
+*.pt
+
+# Environment / Secrets
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Misc
+check_output.txt
+*.resolved
+clean_supabase_import.json
+sqlite_data_backup.json
+*.json
+

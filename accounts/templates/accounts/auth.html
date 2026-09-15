@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 
@@ -8,6 +7,7 @@
     <title>Authentication | Smart Traffic AI – Command Center</title>
     <meta name="description"
         content="Secure authentication for Smart Traffic AI – Intelligent Urban Traffic Command System">
+    {% load static %}
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,230 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Login CSS -->
-    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=10">
+
+    <!-- Embedded Demo OTP Styling (Guaranteed to apply without cache delays) -->
+    <style id="demo-otp-styles">
+        /* ============================================================
+           PREMIUM DEMO OTP BANNER STYLING
+        ============================================================ */
+        .demo-otp-banner {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.88) 0%, rgba(15, 23, 42, 0.96) 100%) !important;
+            border: 1.5px solid rgba(56, 189, 248, 0.35) !important;
+            border-radius: 14px !important;
+            padding: 16px 18px !important;
+            margin: 16px 0 20px 0 !important;
+            text-align: center !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(56, 189, 248, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            backdrop-filter: blur(12px) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .demo-otp-banner::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 2px !important;
+            background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, transparent) !important;
+        }
+
+        .demo-otp-top {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            margin-bottom: 12px !important;
+        }
+
+        .demo-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.5) !important;
+            font-size: 0.68rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 1.2px !important;
+            padding: 3px 10px !important;
+            border-radius: 20px !important;
+            text-transform: uppercase !important;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2) !important;
+        }
+
+        .demo-label-text {
+            font-size: 0.88rem !important;
+            font-weight: 600 !important;
+            color: #e2e8f0 !important;
+            letter-spacing: 0.5px !important;
+        }
+
+        .demo-otp-code-row {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 14px !important;
+            margin-bottom: 10px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .demo-otp-display-screen {
+            background: rgba(10, 15, 29, 0.9) !important;
+            border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
+            border-radius: 10px !important;
+            padding: 6px 18px !important;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.2) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .demo-otp-code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+            font-size: 2rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 8px !important;
+            color: #22d3ee !important;
+            text-shadow: 0 0 16px rgba(34, 211, 238, 0.7), 0 0 32px rgba(34, 211, 238, 0.4) !important;
+            cursor: pointer !important;
+            transition: all 0.25s ease !important;
+            -webkit-user-select: all !important;
+            user-select: all !important;
+            padding-left: 8px !important;
+        }
+
+        .demo-otp-code:hover {
+            transform: scale(1.04) !important;
+            text-shadow: 0 0 22px rgba(34, 211, 238, 0.95), 0 0 40px rgba(56, 189, 248, 0.6) !important;
+            color: #67e8f9 !important;
+        }
+
+        .btn-demo-autofill {
+            background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%) !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-size: 0.82rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.5px !important;
+            padding: 10px 16px !important;
+            border-radius: 10px !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4) !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .btn-demo-autofill:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%) !important;
+            transform: translateY(-2px) scale(1.03) !important;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6) !important;
+        }
+
+        .btn-demo-autofill:active {
+            transform: translateY(0) scale(0.98) !important;
+        }
+
+        .demo-otp-hint {
+            font-size: 0.76rem !important;
+            color: #94a3b8 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+        }
+
+        .demo-otp-hint i {
+            color: #38bdf8 !important;
+        }
+
+        .otp-input-label {
+            font-size: 0.82rem !important;
+            font-weight: 700 !important;
+            color: #94a3b8 !important;
+            text-align: center !important;
+            margin: 16px 0 12px 0 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1.5px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+        }
+
+        .otp-input-label i {
+            color: #6366f1 !important;
+        }
+
+        .otp-feedback-msg {
+            font-size: 0.82rem !important;
+            padding: 10px 14px !important;
+            border-radius: 8px !important;
+            text-align: center !important;
+            margin-bottom: 14px !important;
+            animation: fadeIn 0.3s ease !important;
+        }
+
+        .otp-feedback-msg.error {
+            background: rgba(244, 63, 94, 0.18) !important;
+            border: 1px solid rgba(244, 63, 94, 0.5) !important;
+            color: #fda4af !important;
+        }
+
+        .otp-feedback-msg.success {
+            background: rgba(74, 222, 128, 0.18) !important;
+            border: 1px solid rgba(74, 222, 128, 0.5) !important;
+            color: #86efac !important;
+        }
+
+        /* Strict Hidden Rules: ensure badges and buttons are 100% hidden when .hidden is applied */
+        .hidden,
+        .verified-badge.hidden,
+        .btn-verify-inline.hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* Verified Badge inside input - sleek compact pill, ONLY shown when NOT hidden */
+        .verified-badge:not(.hidden) {
+            position: absolute !important;
+            right: 12px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: rgba(34, 197, 94, 0.16) !important;
+            border: 1px solid rgba(74, 222, 128, 0.45) !important;
+            color: #4ade80 !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.5px !important;
+            padding: 4px 10px !important;
+            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            z-index: 8 !important;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.25) !important;
+            white-space: nowrap !important;
+            pointer-events: none !important;
+            animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        /* Ensure input text never collides with inline buttons or badges */
+        .input-group .input-field {
+            padding-right: 120px !important;
+        }
+
+        .input-group.mobile-group .mobile-input {
+            padding-right: 120px !important;
+        }
+    </style>
 </head>
 
 <body class="login-page">
@@ -94,15 +317,14 @@
 
                 <!-- Messages from Django -->
                 {% if messages %}
-                <ul class="login-messages">
+                <div class="login-messages">
                     {% for message in messages %}
-                    <li class="{% if message.tags == 'success' %}success-msg{% else %}error-msg{% endif %}">
-                        <i
-                            class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
-                        {{ message }}
-                    </li>
+                    <div class="msg-item {% if message.tags == 'success' %}success-msg{% else %}error-msg{% endif %}">
+                        <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
                     {% endfor %}
-                </ul>
+                </div>
                 {% endif %}
 
                 <form method="post" id="login-form" action="{% url 'login' %}">
@@ -112,20 +334,20 @@
                     <!-- Username / Email -->
                     <div class="input-group">
                         <i class="fa-solid fa-user input-icon-login"></i>
-                        <input type="text" name="username" class="input-field" placeholder=" " required
-                            id="login-username" autocomplete="username">
-                        <label class="floating-label">Username or Email</label>
+                        <input type="text" name="username" class="input-field" placeholder="Username or Email" required
+                            id="login-username" autocomplete="username" title="Username or Email">
+                        <label for="login-username" class="floating-label">Username or Email</label>
                         <div class="input-underline"></div>
                     </div>
 
                     <!-- Password -->
                     <div class="input-group">
                         <i class="fa-solid fa-lock input-icon-login"></i>
-                        <input type="password" name="password" class="input-field" placeholder=" " required
-                            id="login-password" autocomplete="current-password">
-                        <label class="floating-label">Password</label>
+                        <input type="password" name="password" class="input-field" placeholder="Password" required
+                            id="login-password" autocomplete="current-password" title="Password">
+                        <label for="login-password" class="floating-label">Password</label>
                         <div class="input-underline"></div>
-                        <i class="fa-solid fa-eye password-toggle" id="login-pw-toggle"></i>
+                        <i class="fa-solid fa-eye password-toggle" id="login-pw-toggle" title="Toggle password visibility" aria-label="Toggle password visibility"></i>
                     </div>
 
                     <!-- Remember Me + Forgot -->
@@ -184,18 +406,18 @@
                         <!-- Full Name -->
                         <div class="input-group">
                             <i class="fa-solid fa-id-card input-icon-login"></i>
-                            <input type="text" name="full_name" class="input-field" placeholder=" " required
-                                id="reg-fullname" autocomplete="name">
-                            <label class="floating-label">Full Name</label>
+                            <input type="text" name="full_name" class="input-field" placeholder="Full Name" required
+                                id="reg-fullname" autocomplete="name" title="Full Name">
+                            <label for="reg-fullname" class="floating-label">Full Name</label>
                             <div class="input-underline"></div>
                         </div>
 
                         <!-- Username -->
                         <div class="input-group" id="username-group">
                             <i class="fa-solid fa-at input-icon-login"></i>
-                            <input type="text" name="username" class="input-field" placeholder=" " required
-                                id="reg-username" autocomplete="username" pattern="^[a-zA-Z0-9_]{3,20}$">
-                            <label class="floating-label">Username</label>
+                            <input type="text" name="username" class="input-field" placeholder="Username" required
+                                id="reg-username" autocomplete="username" pattern="^[a-zA-Z0-9_]{3,20}$" title="Username">
+                            <label for="reg-username" class="floating-label">Username</label>
                             <div class="input-underline"></div>
                             <span class="field-status" id="username-status"></span>
                         </div>
@@ -205,13 +427,13 @@
                         <!-- Email -->
                         <div class="input-group" id="email-group">
                             <i class="fa-solid fa-envelope input-icon-login"></i>
-                            <input type="email" name="email" class="input-field" placeholder=" " required id="reg-email"
-                                autocomplete="email">
-                            <label class="floating-label">Email Address</label>
+                            <input type="email" name="email" class="input-field" placeholder="Email Address" required id="reg-email"
+                                autocomplete="email" title="Email Address">
+                            <label for="reg-email" class="floating-label">Email Address</label>
                             <div class="input-underline"></div>
                             <span class="field-status" id="email-status"></span>
-                            <button type="button" class="btn-verify-inline" id="btn-verify-email" disabled>
-                                <i class="fa-solid fa-paper-plane"></i> Verify
+                            <button type="button" class="btn-verify-inline" id="btn-verify-email" disabled title="Send Email Verification OTP">
+                                <i class="fa-solid fa-paper-plane"></i> <span id="btn-email-text">Verify Email</span>
                             </button>
                             <span class="verified-badge hidden" id="email-verified-badge">
                                 <i class="fa-solid fa-circle-check"></i> Verified
@@ -224,7 +446,7 @@
                         <div class="input-group mobile-group">
                             <i class="fa-solid fa-phone input-icon-login"></i>
                             <div class="country-code-wrapper">
-                                <select id="country-code" class="country-code-select">
+                                <select id="country-code" class="country-code-select" title="Select Country Code" aria-label="Select Country Code">
                                     <option value="+91" selected>+91 🇮🇳</option>
                                     <option value="+1">+1 🇺🇸</option>
                                     <option value="+44">+44 🇬🇧</option>
@@ -237,12 +459,12 @@
                                     <option value="+65">+65 🇸🇬</option>
                                 </select>
                             </div>
-                            <input type="tel" name="mobile" class="input-field mobile-input" placeholder=" " required
-                                id="reg-mobile" pattern="[0-9]{10}" autocomplete="tel">
-                            <label class="floating-label mobile-label">Mobile Number</label>
+                            <input type="tel" name="mobile" class="input-field mobile-input" placeholder="Mobile Number" required
+                                id="reg-mobile" pattern="[0-9]{10}" autocomplete="tel" title="Mobile Number">
+                            <label for="reg-mobile" class="floating-label mobile-label">Mobile Number</label>
                             <div class="input-underline"></div>
-                            <button type="button" class="btn-verify-inline" id="btn-verify-mobile" disabled>
-                                <i class="fa-solid fa-paper-plane"></i> Verify
+                            <button type="button" class="btn-verify-inline" id="btn-verify-mobile" disabled title="Send Mobile Verification OTP">
+                                <i class="fa-solid fa-paper-plane"></i> <span id="btn-mobile-text">Verify Mobile</span>
                             </button>
                             <span class="verified-badge hidden" id="mobile-verified-badge">
                                 <i class="fa-solid fa-circle-check"></i> Verified
@@ -290,11 +512,11 @@
                         <!-- Password -->
                         <div class="input-group" id="password-group">
                             <i class="fa-solid fa-lock input-icon-login"></i>
-                            <input type="password" name="password" class="input-field" placeholder=" " required
-                                id="reg-password" autocomplete="new-password">
-                            <label class="floating-label">Password</label>
+                            <input type="password" name="password" class="input-field" placeholder="Password" required
+                                id="reg-password" autocomplete="new-password" title="Password">
+                            <label for="reg-password" class="floating-label">Password</label>
                             <div class="input-underline"></div>
-                            <i class="fa-solid fa-eye password-toggle" id="reg-pw-toggle"></i>
+                            <i class="fa-solid fa-eye password-toggle" id="reg-pw-toggle" title="Toggle password visibility" aria-label="Toggle password visibility"></i>
                         </div>
                         <div class="field-error-msg" id="password-error"><i
                                 class="fa-solid fa-circle-exclamation"></i><span></span></div>
@@ -321,11 +543,11 @@
                         <!-- Confirm Password -->
                         <div class="input-group">
                             <i class="fa-solid fa-check-double input-icon-login"></i>
-                            <input type="password" class="input-field" placeholder=" " required
-                                id="reg-confirm-password" autocomplete="new-password">
-                            <label class="floating-label">Confirm Password</label>
+                            <input type="password" class="input-field" placeholder="Confirm Password" required
+                                id="reg-confirm-password" autocomplete="new-password" title="Confirm Password">
+                            <label for="reg-confirm-password" class="floating-label">Confirm Password</label>
                             <div class="input-underline"></div>
-                            <i class="fa-solid fa-eye password-toggle" id="reg-cpw-toggle"></i>
+                            <i class="fa-solid fa-eye password-toggle" id="reg-cpw-toggle" title="Toggle confirm password visibility" aria-label="Toggle confirm password visibility"></i>
                             <span class="field-status" id="pw-match-status"></span>
                         </div>
 
@@ -370,20 +592,47 @@
     <!-- ═══════════ OTP MODAL ═══════════ -->
     <div class="otp-overlay hidden" id="otp-overlay">
         <div class="otp-modal" id="otp-modal">
-            <button class="otp-close" id="otp-close"><i class="fa-solid fa-xmark"></i></button>
+            <button class="otp-close" id="otp-close" title="Close OTP Modal" aria-label="Close OTP Modal"><i class="fa-solid fa-xmark"></i></button>
             <div class="otp-header">
                 <div class="otp-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
-                <h3 class="otp-title" id="otp-title">Verify Your Email</h3>
+                <h3 class="otp-title" id="otp-title">Email Verification</h3>
                 <p class="otp-subtitle" id="otp-subtitle">Enter the 6-digit code sent to your email</p>
             </div>
-            <div class="otp-boxes">
-                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">
+
+            <!-- Demo OTP Banner -->
+            <div class="demo-otp-banner" id="demo-otp-banner">
+                <div class="demo-otp-top">
+                    <span class="demo-badge"><i class="fa-solid fa-flask-vial"></i> DEMO OTP</span>
+                    <span class="demo-label-text" id="demo-target-label">Your Email OTP:</span>
+                </div>
+                <div class="demo-otp-code-row">
+                    <div class="demo-otp-display-screen" title="Click to auto-fill">
+                        <span class="demo-otp-code" id="demo-otp-display">------</span>
+                    </div>
+                    <button type="button" class="btn-demo-autofill" id="btn-demo-autofill" title="Auto-fill OTP into boxes">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Fill
+                    </button>
+                </div>
+                <div class="demo-otp-hint"><i class="fa-solid fa-circle-info"></i> Code generated server-side for this demo session</div>
             </div>
+
+            <!-- Input Label -->
+            <div class="otp-input-label" id="otp-input-label">
+                <i class="fa-solid fa-keyboard"></i> <span id="otp-input-label-text">Enter Email OTP:</span>
+            </div>
+
+            <div class="otp-boxes">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" title="OTP Digit 1" placeholder="•" aria-label="OTP Digit 1">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" title="OTP Digit 2" placeholder="•" aria-label="OTP Digit 2">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" title="OTP Digit 3" placeholder="•" aria-label="OTP Digit 3">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" title="OTP Digit 4" placeholder="•" aria-label="OTP Digit 4">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" title="OTP Digit 5" placeholder="•" aria-label="OTP Digit 5">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" title="OTP Digit 6" placeholder="•" aria-label="OTP Digit 6">
+            </div>
+
+            <!-- Inline OTP Feedback Message (Invalid / Expired) -->
+            <div class="otp-feedback-msg hidden" id="otp-feedback-msg"></div>
+
             <div class="otp-timer">
                 <span id="otp-timer-text">Resend in <strong id="otp-countdown">60</strong>s</span>
                 <button class="otp-resend hidden" id="otp-resend">
@@ -391,7 +640,7 @@
                 </button>
             </div>
             <button class="btn-enter btn-otp-verify" id="btn-otp-verify" disabled>
-                <i class="fa-solid fa-check"></i>&nbsp; VERIFY OTP
+                <i class="fa-solid fa-check"></i>&nbsp; <span id="btn-otp-verify-text">Verify Email</span>
             </button>
         </div>
     </div>
@@ -413,7 +662,7 @@
             </div>
             <div class="stat-item">
                 <span class="stat-label">AI Status</span>
-                <span class="stat-value" style="color: #4ade80;">Operational</span>
+                <span class="stat-value text-neon-green">Operational</span>
             </div>
         </div>
     </div>
@@ -422,7 +671,7 @@
     <script>
         (function () {
             // Adds 'has-value' class to any input that has content (typed or autofilled)
-            function markFilledInputs() {
+            window.markFilledInputs = function () {
                 document.querySelectorAll('.input-field').forEach(function (field) {
                     if (field.value && field.value.trim() !== '') {
                         field.classList.add('has-value');
@@ -430,7 +679,7 @@
                         field.classList.remove('has-value');
                     }
                 });
-            }
+            };
 
             // Method 1: CSS animation-based autofill detection (most reliable)
             document.addEventListener('animationstart', function (e) {
@@ -445,35 +694,39 @@
             }, true);
 
             // Method 2: Aggressive polling (catches delayed autofill)
-            markFilledInputs();
+            window.markFilledInputs();
             var pollCount = 0;
             var pollTimer = setInterval(function () {
-                markFilledInputs();
+                window.markFilledInputs();
                 pollCount++;
-                if (pollCount > 50) clearInterval(pollTimer); // Stop after 5 seconds
+                if (pollCount > 60) clearInterval(pollTimer);
             }, 100);
 
-            // Method 3: Listen for input/change events
-            document.addEventListener('input', function (e) {
-                if (e.target.classList.contains('input-field')) markFilledInputs();
-            }, true);
-            document.addEventListener('change', function (e) {
-                if (e.target.classList.contains('input-field')) markFilledInputs();
-            }, true);
+            // Method 3: Listen for input/change/focus/blur/paste/keyup events
+            ['input', 'change', 'focus', 'blur', 'keyup', 'paste'].forEach(function (evt) {
+                document.addEventListener(evt, function (e) {
+                    if (e.target && e.target.classList && e.target.classList.contains('input-field')) {
+                        if (e.target.value && e.target.value.trim() !== '') {
+                            e.target.classList.add('has-value');
+                        } else if (evt !== 'focus') {
+                            e.target.classList.remove('has-value');
+                        }
+                    }
+                }, true);
+            });
 
             // Method 4: DOMContentLoaded + load events
-            document.addEventListener('DOMContentLoaded', markFilledInputs);
+            document.addEventListener('DOMContentLoaded', window.markFilledInputs);
             window.addEventListener('load', function () {
-                markFilledInputs();
-                // One more check after a delay for really late autofill
-                setTimeout(markFilledInputs, 500);
-                setTimeout(markFilledInputs, 1500);
+                window.markFilledInputs();
+                setTimeout(window.markFilledInputs, 300);
+                setTimeout(window.markFilledInputs, 1000);
             });
         })();
     </script>
 
     <!-- ═══════════ LOGIN JS ═══════════ -->
-    <script src="{% static 'js/login.js' %}?v=6"></script>
+    <script src="{% static 'js/login.js' %}?v=10"></script>
 
 </body>
 

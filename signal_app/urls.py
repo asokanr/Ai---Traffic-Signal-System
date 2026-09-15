@@ -33,10 +33,15 @@ urlpatterns = [
 
     # AI Analysis
     path('ai-analysis/', views.ai_analysis_page, name='ai_analysis'),
+    path('ai-analysis/media-videos/', views.list_media_videos, name='list_media_videos'),
+    path('ai-analysis/analyze-media-video/', views.analyze_media_video, name='analyze_media_video'),
     path('ai-analysis/upload/', views.upload_video_analysis, name='upload_video_analysis'),
     path('ai-analysis/camera-check/', views.camera_check, name='camera_check'),
     path('ai-analysis/analyze-frame/', views.analyze_frame, name='analyze_frame'),
+    path('ai-analysis/apply-to-signals/', views.apply_analysis_to_signals, name='apply_analysis_to_signals'),
+    path('ai-analysis/roi-config/', views.roi_config_api, name='roi_config_api'),
     path('ai-analysis/live-feed/', views.live_camera_feed, name='live_camera_feed'),
     path('ai-analysis/live-snapshot/', views.live_analysis_snapshot, name='live_analysis_snapshot'),
     path('ai-analysis/history/', views.analysis_history, name='analysis_history'),
+    path('signal-state/', views.signal_state_api, name='signal_state_api'),
 ]
